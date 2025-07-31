@@ -1,6 +1,7 @@
 import { useState } from "react";
 import DeviceSelectBox from "../components/DeviceSelectBox";
-import MapView from "../components/MapView";
+import MapSelector from "../components/MapSelector";
+import { MAP_CONFIG } from "../config/mapConfig";
 
 const HomePage = () => {
   const [deviceMarkers, setDeviceMarkers] = useState([]);
@@ -61,7 +62,10 @@ const HomePage = () => {
         <DeviceSelectBox onDeviceMarkersChange={setDeviceMarkers} />
       </div>
       <div style={{ width: "100vw", height: "100vh" }}>
-        <MapView markers={deviceMarkers} />
+        <MapSelector 
+          markers={deviceMarkers} 
+          googleApiKey={MAP_CONFIG.GOOGLE_MAPS_API_KEY}
+        />
       </div>
     </div>
   );

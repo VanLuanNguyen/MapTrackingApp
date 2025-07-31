@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import CompactTypeFilter from "./CompactTypeFilter";
 
 const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
   const [allDevices, setAllDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [noData, setNoData] = useState(false);
 
@@ -21,15 +23,15 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
     fetchDevices();
   }, []);
 
-  const fetchLocationByDeviceAndDate = async (deviceId, date) => {
+  const fetchLocationByDeviceAndDate = async (deviceId, date, types = []) => {
     if (!deviceId || !date) return;
     setLoading(true);
     setNoData(false);
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/location?deviceId=${deviceId}&date=${date}`
+        `http://localhost:5000/api/locations?deviceID=${deviceId}&date=${date}`
       );
-      const markers = (response.data || [])
+      let markers = (response.data || [])
         .filter((d) => d.latitude != null && d.longitude != null)
         .map((d) => ({
           lat: d.latitude,
@@ -39,6 +41,12 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
           type: d.type,
           link: d.linkInfo,
         }));
+      
+      // Lọc theo type nếu có chọn
+      if (types.length > 0) {
+        markers = markers.filter(marker => types.includes(marker.type));
+      }
+      
       if (markers.length === 0) {
         setNoData(true);
       }
@@ -66,7 +74,15 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
   };
 
   const handleShowLocation = () => {
-    fetchLocationByDeviceAndDate(selectedDevice, selectedDate);
+    fetchLocationByDeviceAndDate(selectedDevice, selectedDate, selectedTypes);
+  };
+
+  const handleTypeFilterChange = (types) => {
+    setSelectedTypes(types);
+    // Tự động cập nhật lại dữ liệu khi thay đổi filter
+    if (selectedDevice && selectedDate) {
+      fetchLocationByDeviceAndDate(selectedDevice, selectedDate, types);
+    }
   };
 
   return (
@@ -155,6 +171,14 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
           Không có dữ liệu vị trí cho thiết bị và ngày đã chọn.
         </div>
       )}
+      
+      {/* Type Filter */}
+      <div style={{ marginTop: 16 }}>
+        <CompactTypeFilter 
+          onTypeFilterChange={handleTypeFilterChange}
+          selectedTypes={selectedTypes}
+        />
+      </div>
     </div>
   );
 };
