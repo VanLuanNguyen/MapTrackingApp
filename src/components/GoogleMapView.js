@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-const GoogleMapView = ({ markers = [], apiKey = "" }) => {
+const GoogleMapView = ({ markers = [], apiKey = "", onNavigateToLogin, user }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const typeToEmoji = {
     1: "📍",  
@@ -93,19 +94,36 @@ const GoogleMapView = ({ markers = [], apiKey = "" }) => {
             <div style="margin-bottom: 4px;">Loại: ${markerData.type}</div>
             ${markerData.link ? `
               <div style="margin-top: 8px;">
-                <a href="${markerData.link}" target="_blank" rel="noopener noreferrer" 
-                   style="color: #1976d2; text-decoration: none;">
+                <button id="detail-btn-${index}" 
+                        style="background: #1976d2; color: white; border: none; padding: 6px 12px; 
+                               border-radius: 4px; cursor: pointer; font-size: 12px;">
                   Xem chi tiết
-                </a>
+                </button>
               </div>
             ` : ''}
           </div>
         `
       });
 
-      // Add click listener
       marker.addListener('click', () => {
         infoWindow.open(mapInstanceRef.current, marker);
+        
+        setTimeout(() => {
+          const detailBtn = document.getElementById(`detail-btn-${index}`);
+          if (detailBtn) {
+            detailBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              if (user) {
+                if (markerData.link) {
+                  window.open(markerData.link, '_blank');
+                }
+              } else {
+              }
+            });
+          }
+        }, 100);
       });
 
       markersRef.current.push(marker);
@@ -121,27 +139,37 @@ const GoogleMapView = ({ markers = [], apiKey = "" }) => {
     }
   }, [markers, mapLoaded]);
 
+  const handleLoginClick = () => {
+    setShowLoginModal(false);
+    if (onNavigateToLogin) {
+      onNavigateToLogin();
+    }
+  };
+
   return (
-    <div 
-      ref={mapRef} 
-      style={{ 
-        height: '100%', 
-        width: '100%',
-        backgroundColor: '#f0f0f0'
-      }}
-    >
-      {!mapLoaded && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100%',
-          color: '#666'
-        }}>
-          Đang tải bản đồ...
-        </div>
-      )}
-    </div>
+    <>
+      <div 
+        ref={mapRef} 
+        style={{ 
+          height: '100%', 
+          width: '100%',
+          backgroundColor: '#f0f0f0'
+        }}
+      >
+        {!mapLoaded && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            color: '#666'
+          }}>
+            Đang tải bản đồ...
+          </div>
+        )}
+      </div>
+
+    </>
   );
 };
 

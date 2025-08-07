@@ -27,7 +27,7 @@ const emojiIcon = (emoji = "📍") =>
     iconAnchor: [12, 24],
   });
 
-const MapView = ({ markers = [] }) => {
+const MapView = ({ markers = [], onNavigateToLogin, user }) => {
   const [mapCenter, setMapCenter] = useState([21.0278, 105.8342]); // mặc định Hà Nội
 
   useEffect(() => {
@@ -36,35 +36,60 @@ const MapView = ({ markers = [] }) => {
     }
   }, [markers]);
 
-  console.log("Markers nhận được ở MapView:", markers);
+  const handleDetailClick = (link, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (user) {
+      if (link) {
+        window.open(link, '_blank');
+      }
+    } else {
+    }
+  };
 
   return (
-    <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {markers.map((m, index) => (
-        <Marker key={index} position={[m.lat, m.lng]} icon={emojiIcon(typeToEmoji[m.type] || "📍")}>
-          <Popup>
-            <div>
-              <div><b>{m.title}</b></div>
-              <div>Thời gian: {new Date(m.recordDate).toLocaleString()}</div>
-              <div>Loại: {m.type}</div>
-              {m.link && (
-                <div>
-                  <a href={m.link} target="_blank" rel="noopener noreferrer">
-                    Xem chi tiết
-                  </a>
-                </div>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+    <>
+      <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {markers.map((m, index) => (
+          <Marker key={index} position={[m.lat, m.lng]} icon={emojiIcon(typeToEmoji[m.type] || "📍")}>
+            <Popup>
+              <div>
+                <div><b>{m.title}</b></div>
+                <div>Thời gian: {new Date(m.recordDate).toLocaleString()}</div>
+                <div>Loại: {m.type}</div>
+                {m.link && (
+                  <div>
+                    <button 
+                      onClick={(e) => handleDetailClick(m.link, e)}
+                      style={{
+                        background: '#1976d2',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        marginTop: '8px'
+                      }}
+                    >
+                      Xem chi tiết
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
-      <MapAutoZoom markers={markers} />
-    </MapContainer>
+        <MapAutoZoom markers={markers} />
+      </MapContainer>
+      
+    </>
   );
 };
 

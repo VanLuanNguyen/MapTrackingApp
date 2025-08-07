@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CompactTypeFilter from "./CompactTypeFilter";
+import axiosInstance from '../utils/axiosInstance';
 
-const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
+const DeviceSelectBox = ({ onDeviceMarkersChange, user }) => {
   const [allDevices, setAllDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -10,10 +11,32 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
   const [loading, setLoading] = useState(false);
   const [noData, setNoData] = useState(false);
 
+  // Khôi phục trạng thái đã lưu khi component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('deviceSelectState');
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        setSelectedDevice(state.selectedDevice || "");
+        setSelectedDate(state.selectedDate || "");
+        setSelectedTypes(state.selectedTypes || []);
+        
+        // Tự động tải dữ liệu nếu có đủ thông tin
+        if (state.selectedDevice && state.selectedDate) {
+          setTimeout(() => {
+            fetchLocationByDeviceAndDate(state.selectedDevice, state.selectedDate, state.selectedTypes || []);
+          }, 100);
+        }
+      } catch (error) {
+        console.error('Lỗi khi đọc trạng thái đã lưu:', error);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/devices");
+        const response = await axiosInstance.get("http://localhost:5000/api/devices");
         setAllDevices(response.data);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách thiết bị:", error);
@@ -28,7 +51,7 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
     setLoading(true);
     setNoData(false);
     try {
-      const response = await axios.get(
+      const response = await axiosInstance.get(
         `http://localhost:5000/api/locations?deviceID=${deviceId}&date=${date}`
       );
       let markers = (response.data || [])
@@ -64,13 +87,42 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
     }
   };
 
+  // Lưu trạng thái vào localStorage
+  const saveState = () => {
+    const state = {
+      selectedDevice,
+      selectedDate,
+      selectedTypes
+    };
+    localStorage.setItem('deviceSelectState', JSON.stringify(state));
+  };
+
   const handleDeviceChange = (e) => {
-    setSelectedDevice(e.target.value);
+    const value = e.target.value;
+    setSelectedDevice(value);
+    // Lưu trạng thái khi thay đổi
+    setTimeout(() => {
+      const newState = {
+        selectedDevice: value,
+        selectedDate,
+        selectedTypes
+      };
+      localStorage.setItem('deviceSelectState', JSON.stringify(newState));
+    }, 0);
   };
 
   const handleDateChange = (e) => {
     const date = e.target.value;
     setSelectedDate(date);
+    // Lưu trạng thái khi thay đổi
+    setTimeout(() => {
+      const newState = {
+        selectedDevice,
+        selectedDate: date,
+        selectedTypes
+      };
+      localStorage.setItem('deviceSelectState', JSON.stringify(newState));
+    }, 0);
   };
 
   const handleShowLocation = () => {
@@ -79,6 +131,16 @@ const DeviceSelectBox = ({ onDeviceMarkersChange }) => {
 
   const handleTypeFilterChange = (types) => {
     setSelectedTypes(types);
+    // Lưu trạng thái khi thay đổi filter
+    setTimeout(() => {
+      const newState = {
+        selectedDevice,
+        selectedDate,
+        selectedTypes: types
+      };
+      localStorage.setItem('deviceSelectState', JSON.stringify(newState));
+    }, 0);
+    
     // Tự động cập nhật lại dữ liệu khi thay đổi filter
     if (selectedDevice && selectedDate) {
       fetchLocationByDeviceAndDate(selectedDevice, selectedDate, types);

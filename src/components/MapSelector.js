@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import MapView from './MapView';
 import GoogleMapView from './GoogleMapView';
 
-const MapSelector = ({ markers = [], googleApiKey = "" }) => {
+const MapSelector = ({ markers = [], googleApiKey = "", onNavigateToLogin, user }) => {
   const [selectedMap, setSelectedMap] = useState('leaflet'); // 'leaflet' hoặc 'google'
 
   const handleMapChange = (mapType) => {
@@ -91,31 +91,9 @@ const MapSelector = ({ markers = [], googleApiKey = "" }) => {
       {/* Map Display */}
       <div style={{ height: '100%', width: '100%' }}>
         {selectedMap === 'leaflet' ? (
-          <MapView markers={markers} />
+          <MapView markers={markers} onNavigateToLogin={onNavigateToLogin} user={user} />
         ) : (
-          <GoogleMapView markers={markers} apiKey={googleApiKey} />
-        )}
-      </div>
-
-      {/* Map Info */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 10,
-          left: 10,
-          zIndex: 1000,
-          background: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: 6,
-          padding: '6px 12px',
-          fontSize: 12,
-          color: '#666',
-          border: '1px solid #e0e0e0',
-        }}
-      >
-        {selectedMap === 'leaflet' ? (
-          <span>🗺️ OpenStreetMap (Leaflet)</span>
-        ) : (
-          <span>🌍 Google Maps</span>
+          <GoogleMapView markers={markers} apiKey={googleApiKey} onNavigateToLogin={onNavigateToLogin} user={user} />
         )}
       </div>
     </div>
